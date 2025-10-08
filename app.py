@@ -17,7 +17,7 @@ def load_model():
     global model
     if model is None:
         print("Loading model...")
-        model = tf.keras.models.load_model("model.h5")
+        model = tf.keras.models.load_model("yoga_model.h5")
         print("Model loaded successfully.")
 
 @app.route('/')
@@ -53,6 +53,7 @@ def predict():
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 5000))
     app.run(host='0.0.0.0', port=port)
+
 
 
 
