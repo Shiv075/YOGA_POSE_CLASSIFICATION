@@ -8,7 +8,7 @@ app = Flask(__name__)
 
 # ✅ Lazy load the model after the first request to avoid Render timeout
 model = None
-class_names = ['.ipynb_checkpoints', 'Bridge-Pose', 'Child-Pose', 'Cobra-Pose',
+CLASS_NAMES = ['.ipynb_checkpoints', 'Bridge-Pose', 'Child-Pose', 'Cobra-Pose',
                'Downward-Dog-Pose', 'Pigeon-Pose', 'Standing-Mountain-Pose',
                'Tree-Pose', 'Triangle-Pose', 'Warrior-Pose']
 
@@ -53,6 +53,7 @@ def predict():
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 5000))
     app.run(host='0.0.0.0', port=port)
+
 
 
 
