@@ -1,60 +1,60 @@
-from flask import Flask, request, render_template
+import os
+from flask import Flask, render_template, request
 import tensorflow as tf
-from PIL import Image
 import numpy as np
-import io
-import base64
+from PIL import Image
 
 app = Flask(__name__)
 
-# Load model
-model = tf.keras.models.load_model('yoga_model.h5')
-
-# Class names
+# ✅ Lazy load the model after the first request to avoid Render timeout
+model = None
 class_names = ['.ipynb_checkpoints', 'Bridge-Pose', 'Child-Pose', 'Cobra-Pose',
                'Downward-Dog-Pose', 'Pigeon-Pose', 'Standing-Mountain-Pose',
                'Tree-Pose', 'Triangle-Pose', 'Warrior-Pose']
 
-# Function to load and preprocess image
-def load_and_resize_image(img, target_size=(224, 224)):
-    img = Image.open(img).convert('RGB')
-    img = img.resize(target_size)
-    img_array = np.array(img) / 255.0  # normalize
-    return img_array
 
-# Convert image to base64 for display
-def img_to_base64(img):
-    buffered = io.BytesIO()
-    img.save(buffered, format="PNG")
-    return base64.b64encode(buffered.getvalue()).decode()
+def load_model():
+    global model
+    if model is None:
+        print("Loading model...")
+        model = tf.keras.models.load_model("model.h5")
+        print("Model loaded successfully.")
 
 @app.route('/')
-def index():
+def home():
     return render_template('index.html')
 
 @app.route('/predict', methods=['POST'])
 def predict():
-    if 'file' not in request.files:
-        return 'No file uploaded'
-    file = request.files['file']
-    if file.filename == '':
-        return 'No file selected'
+    try:
+        load_model()  # Load model only once when first needed
+        if 'file' not in request.files:
+            return "No file uploaded", 400
 
-    img = load_and_resize_image(file)
-    pred = model.predict(tf.expand_dims(img, axis=0))
-    predicted_class = class_names[pred[0].argmax()]
+        file = request.files['file']
+        if file.filename == '':
+            return "No file selected", 400
 
-    # Reset file pointer to read image for display
-    file.seek(0)
-    img_display = Image.open(file)
-    img_base64 = img_to_base64(img_display)
+        # ✅ Preprocess image
+        img = Image.open(file).convert('RGB')
+        img = img.resize((224, 224))
+        img_array = np.expand_dims(np.array(img) / 255.0, axis=0)
 
-    return render_template('result.html', prediction=predicted_class, img_data=img_base64)
+        # ✅ Predict
+        prediction = model.predict(img_array)
+        predicted_class = CLASS_NAMES[np.argmax(prediction)]
 
-import os
+        return f"Predicted Yoga Pose: {predicted_class}"
 
-if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000)
+    except Exception as e:
+        return f"❌ Internal Error: {str(e)}", 500
+
+
+if __name__ == '__main__':
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host='0.0.0.0', port=port)
+
+
 
 
 
