@@ -3,6 +3,7 @@ from flask import Flask, render_template, request
 import tensorflow as tf
 import numpy as np
 from PIL import Image
+import json
 
 app = Flask(__name__)
 
@@ -12,6 +13,14 @@ CLASS_NAMES = ['.ipynb_checkpoints', 'Bridge-Pose', 'Child-Pose', 'Cobra-Pose',
                'Downward-Dog-Pose', 'Pigeon-Pose', 'Standing-Mountain-Pose',
                'Tree-Pose', 'Triangle-Pose', 'Warrior-Pose']
 
+# ✅ Load pose → image links mapping
+pose_links = {}
+pose_links_path = "pose_links.json"  # Make sure this JSON file is in the same folder
+if os.path.exists(pose_links_path):
+    with open(pose_links_path, 'r') as f:
+        pose_links = json.load(f)
+else:
+    print("⚠️ pose_links.json not found. Images will not be displayed.")
 
 def load_model():
     global model
@@ -44,7 +53,13 @@ def predict():
         prediction = model.predict(img_array)
         predicted_class = CLASS_NAMES[np.argmax(prediction)]
 
-        return f"Predicted Yoga Pose: {predicted_class}"
+        # ✅ Get corresponding image URL from JSON mapping
+        img_url = pose_links.get(predicted_class, None)
+        if isinstance(img_url, list):
+            # If multiple images exist, pick the first one
+            img_url = img_url[0] if len(img_url) > 0 else None
+
+        return render_template('result.html', prediction=predicted_class, img_url=img_url)
 
     except Exception as e:
         return f"❌ Internal Error: {str(e)}", 500
@@ -53,14 +68,3 @@ def predict():
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 5000))
     app.run(host='0.0.0.0', port=port)
-
-
-
-
-
-
-
-
-
-
-
