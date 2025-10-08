@@ -40,7 +40,15 @@
     <div class="card">
         <h3>Predicted Yoga Pose:</h3>
         <h2>{{ prediction }}</h2>
-        <img src="data:image/png;base64,{{ img_data }}" alt="Uploaded Image">
+
+        {% if img_url %}
+            <!-- Show the predicted pose image from Google Drive -->
+            <img src="{{ img_url }}" alt="Predicted Pose Image">
+        {% else %}
+            <!-- Fallback if no image URL found -->
+            <p>Image not available for this pose.</p>
+        {% endif %}
+
         <br>
         <a href="/" class="btn btn-success">Try Another Image</a>
     </div>
