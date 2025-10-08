@@ -54,8 +54,15 @@ def predict():
 import os
 
 if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 5000))  # Render provides PORT
-    app.run(host="0.0.0.0", port=5000, debug=False)
+    # Get port from environment variable or default to 5000
+    port = int(os.environ.get("PORT", 5000))
+    
+    # Print info to logs (helps debugging on Render)
+    print(f"Starting server on port {port}...")
+    
+    # IMPORTANT: Bind to 0.0.0.0 so Render detects the port
+    app.run(host="0.0.0.0", port=port, debug=False)
+
 
 
 
